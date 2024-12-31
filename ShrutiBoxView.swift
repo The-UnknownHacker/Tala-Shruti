@@ -39,6 +39,9 @@ struct ShrutiBoxView: View {
     @Environment(\.colorScheme) var systemColorScheme
     @State private var volume: Double
     @State private var backgroundPlayback: Bool
+    @State private var showInfo = false
+    @StateObject private var tutorialManager = TutorialManager.shared
+    @State private var currentPage = 0
     
     // Initialize with saved preferences
     init() {
@@ -85,72 +88,116 @@ struct ShrutiBoxView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
-                backgroundColor
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 32) {
-                    // Volume Slider
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Image(systemName: "speaker.fill")
-                            Slider(value: $volume, in: 0...1)
-                            Image(systemName: "speaker.wave.3.fill")
+            TabView(selection: $currentPage) {
+                ZStack {
+                    backgroundColor
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 32) {
+                        // Volume Slider
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "speaker.fill")
+                                Slider(value: $volume, in: 0...1)
+                                Image(systemName: "speaker.wave.3.fill")
+                            }
+                            .padding(.horizontal)
+                        }
+                        .background(
+                            GeometryReader { geometry in
+                                Color.clear.onAppear {
+                                    if tutorialManager.tutorialSteps[tutorialManager.currentStep].highlightType == .slider {
+                                        tutorialManager.updateHighlightFrame(geometry.frame(in: .global))
+                                    }
+                                }
+                            }
+                        )
+                        
+                        LazyVGrid(columns: columns, spacing: 20) {
+                            ForEach(shrutis, id: \.rawValue) { shruti in
+                                Button(action: {
+                                    toggleShruti(shruti)
+                                }) {
+                                    VStack(spacing: 8) {
+                                        Text(displayName(for: shruti))
+                                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                                            .foregroundColor(getTextColor(for: shruti))
+                                        if selectedShruti == shruti && isPlaying {
+                                            Text(useMadhyamam ? "Madhyamam" : "Playing")
+                                                .font(.caption)
+                                                .foregroundColor(getTextColor(for: shruti))
+                                        }
+                                    }
+                                    .frame(minWidth: 90, minHeight: 90)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .fill(buttonBackground(for: shruti))
+                                            .shadow(
+                                                color: (selectedShruti == shruti ? 
+                                                    activeTheme.color.opacity(0.3) : 
+                                                    Color.black.opacity(0.1)),
+                                                radius: selectedShruti == shruti ? 10 : 5,
+                                                y: 2
+                                            )
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .strokeBorder(
+                                                effectiveColorScheme == .dark ? 
+                                                    .white.opacity(0.2) : 
+                                                    .black.opacity(0.1),
+                                                lineWidth: 1
+                                            )
+                                    )
+                                    .background(
+                                        GeometryReader { geometry in
+                                            Color.clear.onAppear {
+                                                if tutorialManager.tutorialSteps[tutorialManager.currentStep].highlightType == .button {
+                                                    tutorialManager.updateHighlightFrame(geometry.frame(in: .global))
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
+                                .buttonStyle(PressableButtonStyle())
+                            }
                         }
                         .padding(.horizontal)
                     }
+                    .padding(.vertical)
                     
-                    LazyVGrid(columns: columns, spacing: 20) {
-                        ForEach(shrutis, id: \.rawValue) { shruti in
-                            Button(action: {
-                                toggleShruti(shruti)
-                            }) {
-                                VStack(spacing: 8) {
-                                    Text(displayName(for: shruti))
-                                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                                        .foregroundColor(getTextColor(for: shruti))
-                                    if selectedShruti == shruti && isPlaying {
-                                        Text(useMadhyamam ? "Madhyamam" : "Playing")
-                                            .font(.caption)
-                                            .foregroundColor(getTextColor(for: shruti))
-                                    }
-                                }
-                                .frame(minWidth: 90, minHeight: 90)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .fill(buttonBackground(for: shruti))
-                                        .shadow(
-                                            color: (selectedShruti == shruti ? 
-                                                activeTheme.color.opacity(0.3) : 
-                                                Color.black.opacity(0.1)),
-                                            radius: selectedShruti == shruti ? 10 : 5,
-                                            y: 2
-                                        )
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .strokeBorder(
-                                            effectiveColorScheme == .dark ? 
-                                                .white.opacity(0.2) : 
-                                                .black.opacity(0.1),
-                                            lineWidth: 1
-                                        )
-                                )
-                            }
-                            .buttonStyle(PressableButtonStyle())
-                        }
+                    // Tutorial overlay
+                    if tutorialManager.showTutorial {
+                        TutorialOverlay()
                     }
-                    .padding(.horizontal)
                 }
-                .padding(.vertical)
+                .tag(0)
+                
+                MetronomeView()
+                    .tag(1)
+                
+                PercussionView()
+                    .tag(2)
             }
+            .tabViewStyle(.page)
+            .indexViewStyle(.page(backgroundDisplayMode: .always))
+            .padding(.bottom, -10)  // Negative padding to push dots to bottom
             .navigationTitle("Tala Shruti")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showSettings.toggle() }) {
-                        Image(systemName: "gear")
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { showInfo.toggle() }) {
+                        Image(systemName: "info.circle")
                             .font(.system(size: 20, weight: .regular))
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    // Only show settings when on shruti box page
+                    if currentPage == 0 {
+                        Button(action: { showSettings.toggle() }) {
+                            Image(systemName: "gear")
+                                .font(.system(size: 20, weight: .regular))
+                        }
                     }
                 }
             }
@@ -162,6 +209,9 @@ struct ShrutiBoxView: View {
                     volume: $volume,
                     backgroundPlayback: $backgroundPlayback
                 )
+            }
+            .sheet(isPresented: $showInfo) {
+                AboutView()
             }
         }
         .onChange(of: activeTheme) { _ in savePreferences() }
@@ -177,6 +227,12 @@ struct ShrutiBoxView: View {
         }
         .preferredColorScheme(colorSchemeMode == .system ? nil : 
             colorSchemeMode == .dark ? .dark : .light)
+        .onAppear {
+            // Show tutorial on first launch
+            if !UserDefaults.standard.bool(forKey: "hasSeenTutorial") {
+                tutorialManager.startTutorial()
+            }
+        }
     }
     
     private func buttonBackground(for shruti: SoundAsset) -> Color {
@@ -287,6 +343,7 @@ struct SettingsView: View {
     @Binding var colorSchemeMode: ColorSchemeMode
     @Binding var volume: Double
     @Binding var backgroundPlayback: Bool
+    @ObservedObject private var tutorialManager = TutorialManager.shared
     
     private func themeColor(_ theme: ThemeColor) -> Color {
         if theme == .white {
@@ -346,6 +403,20 @@ struct SettingsView: View {
                     Text("Appearance")
                 } footer: {
                     Text("Customize the app's appearance")
+                }
+                
+                Section {
+                    Button(action: {
+                        dismiss()
+                        tutorialManager.startTutorial()
+                    }) {
+                        HStack {
+                            Image(systemName: "questionmark.circle")
+                            Text("Start Tutorial")
+                        }
+                    }
+                } header: {
+                    Text("Help")
                 }
             }
             .navigationTitle("Settings")
