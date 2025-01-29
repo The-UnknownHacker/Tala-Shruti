@@ -73,7 +73,7 @@ class MetronomeManager: ObservableObject {
     }
     
     func startMetronome() {
-        guard let preset = selectedPreset else { return }
+        guard selectedPreset != nil else { return }
         
         isPlaying = true
         currentBeat = 0

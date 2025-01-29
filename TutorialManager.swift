@@ -25,7 +25,7 @@ class TutorialManager: ObservableObject {
         ),
         TutorialStep(
             title: "Settings",
-            message: "Access settings to change themes and enable Madhyamam mode",
+            message: "Access settings to change themes and enable Madhyamamam mode",
             highlightType: .settings
         ),
         TutorialStep(
@@ -36,6 +36,11 @@ class TutorialManager: ObservableObject {
         TutorialStep(
             title: "Percussion",
             message: "Swipe again for percussion. Choose between Tabla and Mridangam, and tap any button to play loops.",
+            highlightType: .none
+        ),
+        TutorialStep(
+            title: "Tuner",
+            message: "Swipe again for the tuner. Play any note to detect its pitch and frequency.",
             highlightType: .none
         )
     ]

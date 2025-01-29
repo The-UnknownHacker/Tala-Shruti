@@ -7,33 +7,35 @@
 
 import SwiftUI
 
-// Add AppDelegate to handle orientation locking
+// Combined AppDelegate to handle both orientation and feedback
 class AppDelegate: NSObject, UIApplicationDelegate {
-    static var orientationLock = UIInterfaceOrientationMask.portrait
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        FeedbackManager.shared.incrementAppLaunches()
+        return true
+    }
     
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
-        return AppDelegate.orientationLock
+        // Allow all orientations for iPad, but only portrait for iPhone
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return .all
+        } else {
+            return .portrait
+        }
     }
 }
 
 @main
 struct Tala_ShrutiApp: App {
-    @UIApplicationDelegateAdaptor private var appDelegate: AppDelegate
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var audioManager = AudioManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var userDefaultsManager = UserDefaultsManager.shared
-    
-    init() {
-        // Lock orientation to portrait
-        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
-    }
     
     var body: some Scene {
         WindowGroup {
             ShrutiBoxView()
                 .onChange(of: scenePhase) { phase in
                     if phase == .background {
-                        // Save preferences when app goes to background
                         NotificationCenter.default.post(name: .savePreferences, object: nil)
                     }
                 }

@@ -1,6 +1,12 @@
 import SwiftUI
 import AVFoundation
 
+extension SoundAsset {
+    var displayName: String {
+        String(describing: self).replacingOccurrences(of: "Sharp", with: "#")
+    }
+}
+
 enum ThemeColor: String, CaseIterable {
     case blue = "Blue"
     case purple = "Purple"
@@ -25,6 +31,146 @@ enum ColorSchemeMode: String, CaseIterable {
     case system = "System"
     case light = "Light"
     case dark = "Dark"
+}
+
+private struct VolumeSliderView: View {
+    @Binding var volume: Double
+    let sliderMaxWidth: CGFloat
+    @ObservedObject var tutorialManager: TutorialManager
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "speaker.fill")
+                Slider(value: $volume, in: 0...1)
+                Image(systemName: "speaker.wave.3.fill")
+            }
+            .padding(.horizontal)
+            .frame(maxWidth: sliderMaxWidth)
+            .frame(maxWidth: .infinity)
+        }
+        .background(
+            GeometryReader { geometry in
+                Color.clear.onAppear {
+                    if tutorialManager.tutorialSteps[tutorialManager.currentStep].highlightType == .slider {
+                        tutorialManager.updateHighlightFrame(geometry.frame(in: .global))
+                    }
+                }
+            }
+        )
+    }
+}
+
+private struct ShrutiButtonGrid: View {
+    let shrutis: [SoundAsset]
+    let columns: [GridItem]
+    let gridSpacing: CGFloat
+    let horizontalPadding: CGFloat
+    let gridMaxWidth: CGFloat
+    let buttonSize: CGFloat
+    let fontSize: CGFloat
+    @Binding var selectedShruti: SoundAsset?
+    @Binding var isPlaying: Bool
+    var toggleShruti: (SoundAsset) -> Void
+    let effectiveColorScheme: ColorScheme
+    let activeTheme: ThemeColor
+    let useMadhyamam: Bool
+    @ObservedObject var tutorialManager: TutorialManager
+    
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: columns, spacing: gridSpacing) {
+                ForEach(shrutis, id: \.rawValue) { shruti in
+                    Button(action: { toggleShruti(shruti) }) {
+                        ShrutiButtonContent(
+                            shruti: shruti,
+                            fontSize: fontSize,
+                            buttonSize: buttonSize,
+                            isSelected: selectedShruti == shruti,
+                            isPlaying: isPlaying,
+                            useMadhyamam: useMadhyamam,
+                            effectiveColorScheme: effectiveColorScheme,
+                            activeTheme: activeTheme,
+                            tutorialManager: tutorialManager
+                        )
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                }
+            }
+            .padding(.horizontal, horizontalPadding)
+            .frame(maxWidth: gridMaxWidth)
+            .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+private struct ShrutiButtonContent: View {
+    let shruti: SoundAsset
+    let fontSize: CGFloat
+    let buttonSize: CGFloat
+    let isSelected: Bool
+    let isPlaying: Bool
+    let useMadhyamam: Bool
+    let effectiveColorScheme: ColorScheme
+    let activeTheme: ThemeColor
+    @ObservedObject var tutorialManager: TutorialManager
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Text(shruti.displayName)
+                .font(.system(size: fontSize, weight: .bold, design: .rounded))
+                .foregroundColor(getTextColor())
+            if isSelected && isPlaying {
+                Text(useMadhyamam ? "Madhyamam" : "Playing")
+                    .font(.caption)
+                    .foregroundColor(getTextColor())
+            }
+        }
+        .frame(minWidth: buttonSize, minHeight: buttonSize)
+        .background(buttonBackground())
+        .overlay(buttonBorder())
+        .background(
+            GeometryReader { geometry in
+                Color.clear.onAppear {
+                    if tutorialManager.tutorialSteps[tutorialManager.currentStep].highlightType == .button {
+                        tutorialManager.updateHighlightFrame(geometry.frame(in: .global))
+                    }
+                }
+            }
+        )
+    }
+    
+    private func getTextColor() -> Color {
+        if isSelected && isPlaying {
+            if activeTheme == .white {
+                return effectiveColorScheme == .dark ? .black : .white
+            }
+            return .white
+        }
+        return effectiveColorScheme == .dark ? .white : .black
+    }
+    
+    private func buttonBackground() -> some View {
+        RoundedRectangle(cornerRadius: 20)
+            .fill(isSelected && isPlaying ? activeTheme.color : Color.clear)
+            .shadow(
+                color: (isSelected && isPlaying ? 
+                    activeTheme.color.opacity(0.3) : 
+                    Color.black.opacity(0.1)),
+                radius: isSelected && isPlaying ? 10 : 5,
+                y: 2
+            )
+    }
+    
+    private func buttonBorder() -> some View {
+        RoundedRectangle(cornerRadius: 20)
+            .strokeBorder(
+                effectiveColorScheme == .dark ? 
+                    .white.opacity(0.2) : 
+                    .black.opacity(0.1),
+                lineWidth: 1
+            )
+    }
 }
 
 struct ShrutiBoxView: View {
@@ -58,12 +204,21 @@ struct ShrutiBoxView: View {
         .FSharp, .G, .GSharp, .A, .ASharp, .B
     ]
     
-    // Three columns for better layout on larger devices
-    let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
+    // Static properties for layout
+    private static let iPadMinWidth: CGFloat = 150
+    private static let iPadMaxWidth: CGFloat = 200
+    private static let iPhoneMinWidth: CGFloat = 100
+    private static let iPhoneMaxWidth: CGFloat = 150
+    
+    // Simplified columns property
+    private var columns: [GridItem] {
+        let isIPad = UIDevice.current.userInterfaceIdiom == .pad
+        let minWidth = isIPad ? Self.iPadMinWidth : Self.iPhoneMinWidth
+        let maxWidth = isIPad ? Self.iPadMaxWidth : Self.iPhoneMaxWidth
+        
+        let gridItem = GridItem(.adaptive(minimum: minWidth, maximum: maxWidth))
+        return [gridItem, gridItem, gridItem]
+    }
     
     // Compute the effective color scheme
     private var effectiveColorScheme: ColorScheme {
@@ -86,87 +241,76 @@ struct ShrutiBoxView: View {
         )
     }
     
+    // Add these helper properties
+    private var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+    
+    private var stackSpacing: CGFloat {
+        isIPad ? 48 : 32
+    }
+    
+    private var sliderMaxWidth: CGFloat {
+        isIPad ? 800 : 600
+    }
+    
+    private var gridSpacing: CGFloat {
+        isIPad ? 30 : 20
+    }
+    
+    private var horizontalPadding: CGFloat {
+        isIPad ? 40 : 20
+    }
+    
+    private var gridMaxWidth: CGFloat {
+        isIPad ? 1000 : 600
+    }
+    
+    private var verticalPadding: CGFloat {
+        isIPad ? 40 : 20
+    }
+    
+    private var fontSize: CGFloat {
+        isIPad ? 36 : 28
+    }
+    
+    private var buttonSize: CGFloat {
+        isIPad ? 120 : 90
+    }
+    
     var body: some View {
         NavigationView {
             TabView(selection: $currentPage) {
                 ZStack {
-                    backgroundColor
-                        .ignoresSafeArea()
+                    backgroundColor.ignoresSafeArea()
                     
-                    VStack(spacing: 32) {
-                        // Volume Slider
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "speaker.fill")
-                                Slider(value: $volume, in: 0...1)
-                                Image(systemName: "speaker.wave.3.fill")
-                            }
-                            .padding(.horizontal)
-                        }
-                        .background(
-                            GeometryReader { geometry in
-                                Color.clear.onAppear {
-                                    if tutorialManager.tutorialSteps[tutorialManager.currentStep].highlightType == .slider {
-                                        tutorialManager.updateHighlightFrame(geometry.frame(in: .global))
-                                    }
-                                }
-                            }
+                    VStack(spacing: stackSpacing) {
+                        VolumeSliderView(
+                            volume: $volume,
+                            sliderMaxWidth: sliderMaxWidth,
+                            tutorialManager: tutorialManager
                         )
                         
-                        LazyVGrid(columns: columns, spacing: 20) {
-                            ForEach(shrutis, id: \.rawValue) { shruti in
-                                Button(action: {
-                                    toggleShruti(shruti)
-                                }) {
-                                    VStack(spacing: 8) {
-                                        Text(displayName(for: shruti))
-                                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                                            .foregroundColor(getTextColor(for: shruti))
-                                        if selectedShruti == shruti && isPlaying {
-                                            Text(useMadhyamam ? "Madhyamam" : "Playing")
-                                                .font(.caption)
-                                                .foregroundColor(getTextColor(for: shruti))
-                                        }
-                                    }
-                                    .frame(minWidth: 90, minHeight: 90)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 20)
-                                            .fill(buttonBackground(for: shruti))
-                                            .shadow(
-                                                color: (selectedShruti == shruti ? 
-                                                    activeTheme.color.opacity(0.3) : 
-                                                    Color.black.opacity(0.1)),
-                                                radius: selectedShruti == shruti ? 10 : 5,
-                                                y: 2
-                                            )
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 20)
-                                            .strokeBorder(
-                                                effectiveColorScheme == .dark ? 
-                                                    .white.opacity(0.2) : 
-                                                    .black.opacity(0.1),
-                                                lineWidth: 1
-                                            )
-                                    )
-                                    .background(
-                                        GeometryReader { geometry in
-                                            Color.clear.onAppear {
-                                                if tutorialManager.tutorialSteps[tutorialManager.currentStep].highlightType == .button {
-                                                    tutorialManager.updateHighlightFrame(geometry.frame(in: .global))
-                                                }
-                                            }
-                                        }
-                                    )
-                                }
-                                .buttonStyle(PressableButtonStyle())
-                            }
-                        }
-                        .padding(.horizontal)
+                        ShrutiButtonGrid(
+                            shrutis: shrutis,
+                            columns: columns,
+                            gridSpacing: gridSpacing,
+                            horizontalPadding: horizontalPadding,
+                            gridMaxWidth: gridMaxWidth,
+                            buttonSize: buttonSize,
+                            fontSize: fontSize,
+                            selectedShruti: $selectedShruti,
+                            isPlaying: $isPlaying,
+                            toggleShruti: toggleShruti,
+                            effectiveColorScheme: effectiveColorScheme,
+                            activeTheme: activeTheme,
+                            useMadhyamam: useMadhyamam,
+                            tutorialManager: tutorialManager
+                        )
                     }
-                    .padding(.vertical)
+                    .padding(.vertical, verticalPadding)
+                    .frame(maxWidth: .infinity)
                     
-                    // Tutorial overlay
                     if tutorialManager.showTutorial {
                         TutorialOverlay()
                     }
@@ -178,6 +322,9 @@ struct ShrutiBoxView: View {
                 
                 PercussionView()
                     .tag(2)
+                
+                TunerView()
+                    .tag(3)
             }
             .tabViewStyle(.page)
             .indexViewStyle(.page(backgroundDisplayMode: .always))
@@ -233,23 +380,7 @@ struct ShrutiBoxView: View {
                 tutorialManager.startTutorial()
             }
         }
-    }
-    
-    private func buttonBackground(for shruti: SoundAsset) -> Color {
-        if selectedShruti == shruti && isPlaying {
-            if activeTheme == .white {
-                // Use white in dark mode, black in light mode
-                return effectiveColorScheme == .dark ? 
-                    Color.white : 
-                    Color.black
-            }
-            return useMadhyamam ? activeTheme.color.opacity(0.8) : activeTheme.color
-        }
-        return effectiveColorScheme == .dark ? Color(white: 0.3) : Color(.systemGray5)
-    }
-    
-    private func displayName(for shruti: SoundAsset) -> String {
-        String(describing: shruti).replacingOccurrences(of: "Sharp", with: "#")
+        .navigationViewStyle(.stack)
     }
     
     private func toggleShruti(_ note: SoundAsset) {
@@ -311,17 +442,6 @@ struct ShrutiBoxView: View {
         audioPlayer?.stop()
         isPlaying = false
         selectedShruti = nil
-    }
-    
-    private func getTextColor(for shruti: SoundAsset) -> Color {
-        if selectedShruti == shruti && isPlaying {
-            if activeTheme == .white {
-                // If white theme: use black text in dark mode, white text in light mode
-                return effectiveColorScheme == .dark ? .black : .white
-            }
-            return .white  // Default white text for other colored buttons
-        }
-        return effectiveColorScheme == .dark ? .white : .black  // Normal state text color
     }
     
     func savePreferences() {

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AboutView: View {
     @Environment(\.dismiss) var dismiss
+    @State private var showFeedback = false
     
     var body: some View {
         NavigationView {
@@ -35,6 +36,7 @@ struct AboutView: View {
                     FeatureRow(icon: "paintbrush", title: "Themes", description: "Multiple color themes and appearance modes")
                     FeatureRow(icon: "metronome", title: "Tala Metronome", description: "Customizable rhythm patterns")
                     FeatureRow(icon: "waveform.circle", title: "Percussion", description: "Tabla and Mridangam loops with tempo control")
+                    FeatureRow(icon: "tuningfork", title: "Tuner", description: "Real-time pitch detection for instruments")
                 }
                 
                 Section(header: Text("About")) {
@@ -48,6 +50,21 @@ struct AboutView: View {
                         .foregroundColor(.secondary)
                         .font(.footnote)
                 }
+                
+                Section {
+                    Button(action: {
+                        showFeedback.toggle()
+                    }) {
+                        HStack {
+                            Image(systemName: "envelope.fill")
+                            Text("Send Feedback")
+                        }
+                    }
+                } header: {
+                    Text("Feedback")
+                } footer: {
+                    Text("We value your feedback! Let us know how we can improve.")
+                }
             }
             .navigationTitle("About")
             .navigationBarTitleDisplayMode(.inline)
@@ -58,6 +75,9 @@ struct AboutView: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showFeedback) {
+            FeedbackView()
         }
     }
 }

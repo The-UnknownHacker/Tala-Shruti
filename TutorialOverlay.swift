@@ -2,6 +2,11 @@ import SwiftUI
 
 struct TutorialOverlay: View {
     @ObservedObject var tutorialManager = TutorialManager.shared
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var textColor: Color {
+        colorScheme == .dark ? .white : .black
+    }
     
     var body: some View {
         GeometryReader { geometry in
@@ -9,18 +14,19 @@ struct TutorialOverlay: View {
                 // Background with highlight
                 TutorialBackground(
                     highlightFrame: tutorialManager.highlightFrame,
-                    step: tutorialManager.tutorialSteps[tutorialManager.currentStep]
+                    step: tutorialManager.tutorialSteps[tutorialManager.currentStep],
+                    colorScheme: colorScheme
                 )
                 
                 // Tutorial content
                 VStack(spacing: 24) {
                     Text(tutorialManager.tutorialSteps[tutorialManager.currentStep].title)
                         .font(.title2.bold())
-                        .foregroundColor(.white)
+                        .foregroundColor(textColor)
                     
                     Text(tutorialManager.tutorialSteps[tutorialManager.currentStep].message)
                         .font(.body)
-                        .foregroundColor(.white)
+                        .foregroundColor(textColor)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
                         .padding(.horizontal)
@@ -61,11 +67,12 @@ struct TutorialOverlay: View {
 struct TutorialBackground: View {
     let highlightFrame: CGRect
     let step: TutorialStep
+    let colorScheme: ColorScheme
     
     var body: some View {
         ZStack {
-            // Background overlay
-            Color.black.opacity(0.75)
+            // Background overlay with different opacity based on color scheme
+            Color.black.opacity(colorScheme == .dark ? 0.75 : 0.5)
             
             // Highlight area with pulsing animation
             if step.highlightType != .none {
