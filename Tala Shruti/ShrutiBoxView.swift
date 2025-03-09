@@ -375,6 +375,10 @@ struct ShrutiBoxView: View {
         .preferredColorScheme(colorSchemeMode == .system ? nil : 
             colorSchemeMode == .dark ? .dark : .light)
         .onAppear {
+            // Configure audio for the main page
+            print("ShrutiBoxView appeared - configuring audio for main page")
+            AudioManager.shared.configureForMainPage()
+            
             // Show tutorial on first launch
             if !UserDefaults.standard.bool(forKey: "hasSeenTutorial") {
                 tutorialManager.startTutorial()

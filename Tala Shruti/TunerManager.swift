@@ -10,8 +10,8 @@ class TunerManager: ObservableObject {
     @Published var octave = 0
     @Published var cents: Float = 0.0
     
-    private var audioEngine: AVAudioEngine!
-    private var inputNode: AVAudioInputNode!
+    private var audioEngine: AVAudioEngine?
+    private var inputNode: AVAudioInputNode?
     private var smoothedFrequency: Float = 0.0
     private let smoothingFactor: Float = 0.5  // Less smoothing for faster response
     
@@ -24,47 +24,45 @@ class TunerManager: ObservableObject {
     ]
     
     init() {
-        setupAudioSession()
-        setupAudioEngine()
     }
     
     func setupAudioSession() {
-        do {
-            let session = AVAudioSession.sharedInstance()
-            // Use playAndRecord category only for the tuner
-            try session.setCategory(.playAndRecord, 
-                                  mode: .measurement, 
-                                  options: [.mixWithOthers, .defaultToSpeaker])
-            try session.setPreferredIOBufferDuration(0.005)
-            try session.setActive(true)
-        } catch {
-            print("Failed to set up tuner audio session: \(error)")
-        }
     }
     
     private func setupAudioEngine() {
+        if let existingEngine = audioEngine, existingEngine.isRunning {
+            existingEngine.stop()
+            inputNode?.removeTap(onBus: 0)
+        }
+        
         audioEngine = AVAudioEngine()
+        guard let audioEngine = audioEngine else { return }
+        
         inputNode = audioEngine.inputNode
+        
+        guard let inputNode = inputNode else {
+            print("Failed to get input node")
+            return
+        }
         
         let format = inputNode.outputFormat(forBus: 0)
         let sampleRate = Float(format.sampleRate)
         
-        // Smaller buffer size for faster processing
+        print("Setting up audio engine with format: \(format)")
+        
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, time in
             guard let self = self else { return }
             
             let channelData = buffer.floatChannelData?[0]
             let frameLength = UInt(buffer.frameLength)
             
-            // Quick RMS calculation
             var sum: Float = 0.0
-            for i in stride(from: 0, to: Int(frameLength), by: 4) { // Sample every 4th value
+            for i in stride(from: 0, to: Int(frameLength), by: 4) {
                 let sample = channelData?[i] ?? 0.0
                 sum += sample * sample
             }
-            let rms = sqrt(sum * 4 / Float(frameLength)) // Adjust for stride
+            let rms = sqrt(sum * 4 / Float(frameLength))
             
-            // Only process if we have enough signal
             guard rms > 0.01 else {
                 DispatchQueue.main.async {
                     self.amplitude = rms
@@ -76,7 +74,6 @@ class TunerManager: ObservableObject {
                 return
             }
             
-            // Optimized pitch detection
             var period = 0
             var bestCorrelation: Float = 0
             let maxShift = min(Int(frameLength/2), Int(sampleRate/50)) // Limit search range
@@ -137,23 +134,34 @@ class TunerManager: ObservableObject {
     }
     
     func start() {
+        // Make sure audio session is configured for tuner
+        AudioManager.shared.configureForTunerPage()
+        
+        // Set up the audio engine after the session is configured
+        setupAudioEngine()
+        
+        // Start the engine
         do {
+            guard let audioEngine = audioEngine else {
+                print("No audio engine to start")
+                return
+            }
+            
             try audioEngine.start()
+            print("Audio engine started successfully")
         } catch {
             print("Failed to start audio engine: \(error)")
         }
     }
     
     func stop() {
-        audioEngine.stop()
-        inputNode.removeTap(onBus: 0)
-        setupAudioEngine()
+        guard let audioEngine = audioEngine else { return }
         
-        // Reset audio session when stopping tuner
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-        } catch {
-            print("Failed to reset audio session: \(error)")
-        }
+        audioEngine.stop()
+        inputNode?.removeTap(onBus: 0)
+        self.audioEngine = nil
+        self.inputNode = nil
+        
+        print("Audio engine stopped")
     }
 } 

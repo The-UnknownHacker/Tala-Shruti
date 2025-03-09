@@ -118,10 +118,15 @@ struct TunerView: View {
             .padding()
         }
         .onAppear {
+            print("TunerView appeared - starting tuner")
             tuner.start()
         }
         .onDisappear {
+            print("TunerView disappeared - stopping tuner")
             tuner.stop()
+            
+            // Switch back to main page mode when leaving the tuner
+            AudioManager.shared.configureForMainPage()
         }
     }
 }

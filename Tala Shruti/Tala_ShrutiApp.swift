@@ -27,7 +27,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct Tala_ShrutiApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var audioManager = AudioManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var userDefaultsManager = UserDefaultsManager.shared
     
