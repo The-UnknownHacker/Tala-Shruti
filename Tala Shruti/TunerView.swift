@@ -33,14 +33,11 @@ struct TunerView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 20) {
-                // Main Tuner Display
                 ZStack {
-                    // Outer circle
                     Circle()
                         .stroke(Color.secondary.opacity(0.2), lineWidth: 3)
                         .frame(width: 280, height: 280)
                     
-                    // Tuning marks
                     ForEach(-25...25, id: \.self) { i in
                         Rectangle()
                             .fill(Color.secondary)
@@ -50,13 +47,11 @@ struct TunerView: View {
                             .rotationEffect(.degrees(Double(i) * 3.6))
                     }
                     
-                    // Center mark
                     Rectangle()
                         .fill(Color.secondary)
                         .frame(width: 2, height: 20)
                         .offset(y: -130)
                     
-                    // Needle
                     Rectangle()
                         .fill(noteColor)
                         .frame(width: 3, height: 140)
@@ -69,7 +64,6 @@ struct TunerView: View {
                         .rotationEffect(.degrees(min(45, max(-45, Double(tuner.cents) * 1.8))))
                         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: tuner.cents)
                     
-                    // Note Display
                     VStack(spacing: 5) {
                         Text(tuner.noteNameWithSharps)
                             .font(.system(size: 80, weight: .bold, design: .rounded))
@@ -87,7 +81,6 @@ struct TunerView: View {
                 .padding(.top, 20)
                 
                 
-                // Input Level Meter
                 VStack(spacing: 8) {
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 4)
@@ -119,14 +112,22 @@ struct TunerView: View {
         }
         .onAppear {
             print("TunerView appeared - starting tuner")
-            tuner.start()
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                AudioManager.shared.configureForTunerPage()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    tuner.start()
+                }
+            }
         }
         .onDisappear {
             print("TunerView disappeared - stopping tuner")
             tuner.stop()
             
-            // Switch back to main page mode when leaving the tuner
-            AudioManager.shared.configureForMainPage()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                AudioManager.shared.configureForMainPage()
+            }
         }
     }
 }

@@ -37,6 +37,8 @@ struct AboutView: View {
                     FeatureRow(icon: "metronome", title: "Tala Metronome", description: "Customizable rhythm patterns")
                     FeatureRow(icon: "waveform.circle", title: "Percussion", description: "Tabla and Mridangam loops with tempo control")
                     FeatureRow(icon: "tuningfork", title: "Tuner", description: "Real-time pitch detection for instruments")
+                    FeatureRow(icon: "lyrics", title: "Lyrics", description: "Lyrics for any song any time")
+
                 }
                 
                 Section(header: Text("About")) {
@@ -46,7 +48,7 @@ struct AboutView: View {
                 }
                 
                 Section(header: Text("Legal")) {
-                    Text("© 2024 Aarav J. All rights reserved.")
+                    Text("© 2025 Aarav J. All rights reserved.")
                         .foregroundColor(.secondary)
                         .font(.footnote)
                 }

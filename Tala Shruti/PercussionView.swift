@@ -22,7 +22,6 @@ struct PercussionView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
-                // Tempo Section
                 VStack(spacing: 16) {
                     Text("\(Int(percussion.tempo))")
                         .font(.system(size: 72, weight: .bold, design: .rounded))
@@ -32,7 +31,6 @@ struct PercussionView: View {
                         .font(.title3)
                         .foregroundColor(.secondary)
                     
-                    // Tempo Controls
                     HStack(spacing: 24) {
                         Button(action: { percussion.setTempo(percussion.tempo - 5) }) {
                             Image(systemName: "minus.circle.fill")
@@ -61,7 +59,6 @@ struct PercussionView: View {
                     }
                 }
                 
-                // Instrument Toggle
                 Picker("Instrument", selection: .init(
                     get: { percussion.selectedInstrument },
                     set: { _ in percussion.toggleInstrument() }
@@ -74,7 +71,6 @@ struct PercussionView: View {
                 
                 Spacer()
                 
-                // Percussion Buttons
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
                     GridItem(.flexible())
@@ -88,6 +84,12 @@ struct PercussionView: View {
                 Spacer()
             }
             .padding(.top, 16)
+        }
+        .onAppear {
+            percussion.isOnPercussionPage = true
+        }
+        .onDisappear {
+            percussion.stopPlaying()
         }
     }
 }

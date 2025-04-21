@@ -6,5 +6,18 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>SignInWithAppleOnboardingActivity</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.aaravj.tala-shruti</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

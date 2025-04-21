@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-// Combined AppDelegate to handle both orientation and feedback
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FeedbackManager.shared.incrementAppLaunches()
@@ -15,7 +14,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
     
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
-        // Allow all orientations for iPad, but only portrait for iPhone
         if UIDevice.current.userInterfaceIdiom == .pad {
             return .all
         } else {
@@ -29,15 +27,37 @@ struct Tala_ShrutiApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var userDefaultsManager = UserDefaultsManager.shared
+    @StateObject private var authManager = AuthManager.shared
+    @StateObject private var lyricsManager = LyricsManager.shared
+    @AppStorage("hasSeenLanding") private var hasSeenLanding = false
+    @State private var showLanding = false
     
     var body: some Scene {
         WindowGroup {
-            ShrutiBoxView()
-                .onChange(of: scenePhase) { phase in
-                    if phase == .background {
-                        NotificationCenter.default.post(name: .savePreferences, object: nil)
-                    }
+            Group {
+                if !hasSeenLanding {
+                    LandingView()
+                        .onAppear {
+                            print("Tala_ShrutiApp: Showing LandingView - hasSeenLanding: \(hasSeenLanding), isAuthenticated: \(authManager.isAuthenticated)")
+                        }
+                } else if authManager.isAuthenticated {
+                    ContentView()
+                        .onAppear {
+                            print("Tala_ShrutiApp: Showing ContentView - hasSeenLanding: \(hasSeenLanding), isAuthenticated: \(authManager.isAuthenticated)")
+                        }
+                } else {
+                    LandingView()
+                        .onAppear {
+                            print("Tala_ShrutiApp: Showing LandingView (not authenticated) - hasSeenLanding: \(hasSeenLanding), isAuthenticated: \(authManager.isAuthenticated)")
+                        }
                 }
+            }
+            .onAppear {
+                print("Tala_ShrutiApp: App appeared - hasSeenLanding: \(hasSeenLanding), isAuthenticated: \(authManager.isAuthenticated)")
+                if !hasSeenLanding {
+                    showLanding = true
+                }
+            }
         }
     }
 }

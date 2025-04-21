@@ -8,7 +8,7 @@ class FeedbackManager: ObservableObject {
     private let appLaunchesKey = "numberOfAppLaunches"
     private let lastRatingPromptKey = "lastRatingPromptDate"
     private let minimumLaunchesForRating = 5
-    private let minimumDaysBetweenPrompts = 60.0 // 60 days
+    private let minimumDaysBetweenPrompts = 60.0 
     
     func incrementAppLaunches() {
         let currentLaunches = defaults.integer(forKey: appLaunchesKey)

@@ -9,7 +9,6 @@ class UserDefaultsManager: ObservableObject {
     
     private let defaults = UserDefaults.standard
     
-    // Keys for UserDefaults
     private let themeKey = "selectedTheme"
     private let colorSchemeKey = "colorScheme"
     private let madhyamamKey = "useMadhyamam"
@@ -17,7 +16,6 @@ class UserDefaultsManager: ObservableObject {
     private let backgroundPlaybackKey = "backgroundPlayback"
     
     private init() {
-        // Set up notification observer
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleSavePreferences),
@@ -27,8 +25,6 @@ class UserDefaultsManager: ObservableObject {
     }
     
     @objc private func handleSavePreferences() {
-        // This will be called when the app goes to background
-        // The actual saving is done through the savePreferences method
     }
     
     func savePreferences(theme: ThemeColor, colorScheme: ColorSchemeMode, 
@@ -44,7 +40,7 @@ class UserDefaultsManager: ObservableObject {
     func loadTheme() -> ThemeColor {
         guard let themeString = defaults.string(forKey: themeKey),
               let theme = ThemeColor(rawValue: themeString) else {
-            return .blue // Default theme
+            return .blue 
         }
         return theme
     }
@@ -52,7 +48,7 @@ class UserDefaultsManager: ObservableObject {
     func loadColorScheme() -> ColorSchemeMode {
         guard let modeString = defaults.string(forKey: colorSchemeKey),
               let mode = ColorSchemeMode(rawValue: modeString) else {
-            return .system // Default mode
+            return .system 
         }
         return mode
     }

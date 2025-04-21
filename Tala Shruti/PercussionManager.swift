@@ -7,6 +7,7 @@ class PercussionManager: ObservableObject {
     @Published var tempo: Double = 100.0
     @Published var selectedInstrument = "Tabla"
     @Published private(set) var activeButton: Int?
+    @Published var isOnPercussionPage = false
     
     private var players: [AVAudioPlayer] = []
     
@@ -22,9 +23,9 @@ class PercussionManager: ObservableObject {
         players = files.compactMap { filename in
             guard let path = Bundle.main.path(forResource: filename, ofType: "wav") else { return nil }
             let player = try? AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
-            player?.numberOfLoops = -1  // Loop indefinitely
+            player?.numberOfLoops = -1  
             player?.prepareToPlay()
-            player?.enableRate = true   // Enable rate adjustment
+            player?.enableRate = true  
             return player
         }
     }
@@ -49,7 +50,7 @@ class PercussionManager: ObservableObject {
         
         activeButton = index
         let player = players[index]
-        player.rate = Float(tempo / 100.0)  // Adjust playback rate based on tempo
+        player.rate = Float(tempo / 100.0)  
         player.play()
     }
     
@@ -63,5 +64,10 @@ class PercussionManager: ObservableObject {
         if let currentButton = activeButton {
             players[currentButton].rate = Float(tempo / 100.0)
         }
+    }
+    
+    func cleanupAudio() {
+        stopPlaying()
+        players.removeAll()
     }
 } 

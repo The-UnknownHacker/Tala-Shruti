@@ -78,7 +78,6 @@ struct FeedbackView: View {
     }
 }
 
-// Add this extension for the placeholder
 extension View {
     func placeholder<Content: View>(
         when shouldShow: Bool,

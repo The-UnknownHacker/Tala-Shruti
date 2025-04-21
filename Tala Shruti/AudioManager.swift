@@ -2,30 +2,44 @@ import Foundation
 import AVFoundation
 
 enum AudioSessionMode {
-    case mainPage       // Main page: Speaker output only
-    case tunerPage      // Tuner page: Microphone input only
+    case mainPage       
+    case tunerPage      
 }
 
 class AudioManager: ObservableObject {
     static let shared = AudioManager()
-    private let gainBoost: Float = 5.0 // Adjust this value to control the amount of gain boost
+    private let gainBoost: Float = 5.0 /
     @Published var currentMode: AudioSessionMode = .mainPage
     
     private init() {
-        // Don't automatically configure - wait for explicit calls
     }
     
     func configureForMainPage() {
         do {
-            // First deactivate any existing session
-            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            if currentMode == .tunerPage {
+                try AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
+                Thread.sleep(forTimeInterval: 0.1)
+            }
             
-            // Now configure for playback
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, mode: .default)
-            try session.setActive(true)
             
-            // Finally update state
+            var success = false
+            for _ in 1...3 {
+                do {
+                    try session.setActive(true)
+                    success = true
+                    break
+                } catch {
+                    Thread.sleep(forTimeInterval: 0.1)
+                }
+            }
+            
+            if !success {
+                print("Warning: Failed multiple attempts to activate audio session for main page")
+                try? session.setActive(true)
+            }
+            
             currentMode = .mainPage
             print("Successfully configured audio for main page")
         } catch {
@@ -35,16 +49,32 @@ class AudioManager: ObservableObject {
     
     func configureForTunerPage() {
         do {
-            // First deactivate any existing session
-            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            if currentMode == .mainPage {
+                try? AVAudioSession.sharedInstance().setActive(false, options: [])
+                Thread.sleep(forTimeInterval: 0.1)
+            }
             
-            // Now configure for tuner
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .measurement)
-            try session.setPreferredIOBufferDuration(0.005)
-            try session.setActive(true)
             
-            // Finally update state
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try session.setPreferredIOBufferDuration(0.005)
+            
+            var success = false
+            for _ in 1...3 {
+                do {
+                    try session.setActive(true)
+                    success = true
+                    break
+                } catch {
+                    Thread.sleep(forTimeInterval: 0.1)
+                }
+            }
+            
+            if !success {
+                print("Warning: Failed multiple attempts to activate audio session for tuner page")
+                try? session.setActive(true)
+            }
+            
             currentMode = .tunerPage
             print("Successfully configured audio for tuner page")
         } catch {
@@ -53,7 +83,6 @@ class AudioManager: ObservableObject {
     }
     
     func createPlayer(for asset: SoundAsset) -> AVAudioPlayer? {
-        // Make sure we're in the right mode for playback
         if currentMode != .mainPage {
             configureForMainPage()
         }
@@ -67,7 +96,7 @@ class AudioManager: ObservableObject {
             let player = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
             player.enableRate = true
             player.prepareToPlay()
-            player.volume = gainBoost // Apply gain boost
+            player.volume = gainBoost 
             return player
         } catch {
             print("Failed to create audio player: \(error)")
@@ -76,7 +105,6 @@ class AudioManager: ObservableObject {
     }
     
     func enableBackgroundPlayback(_ enabled: Bool) {
-        // Only apply to main page mode
         if currentMode != .mainPage {
             return
         }
