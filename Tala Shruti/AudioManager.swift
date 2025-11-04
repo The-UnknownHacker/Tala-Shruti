@@ -8,7 +8,7 @@ enum AudioSessionMode {
 
 class AudioManager: ObservableObject {
     static let shared = AudioManager()
-    private let gainBoost: Float = 5.0 /
+    private let gainBoost: Float = 5.0
     @Published var currentMode: AudioSessionMode = .mainPage
     
     private init() {
