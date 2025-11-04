@@ -414,6 +414,9 @@ struct ShrutiBoxView: View {
                 
                 TunerView()
                     .tag(3)
+                
+                RagaTrainingView()
+                    .tag(4)
             }
             .tabViewStyle(.page)
             .indexViewStyle(.page(backgroundDisplayMode: .always))

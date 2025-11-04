@@ -9,6 +9,7 @@
 - **Metronome** – Simple tempo controller for practice with BPM control  
 - **Pre-Recorded Practice Beats** – Realistic beats for varnam, kriti, and kalpana swaram practice  
 - **Tuner** – Helps vocalists and instrumentalists tune to perfect pitch  
+- **Raga Training** – Interactive raga practice with real-time pitch detection (Mayamalavagowla)  
 - **Lyrics Page** – View and sing along with Carnatic compositions  
 
 ## 📱 Built With
