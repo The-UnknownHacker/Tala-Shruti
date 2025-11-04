@@ -82,13 +82,14 @@ class AudioManager: ObservableObject {
         }
     }
     
-    func createPlayer(for asset: SoundAsset) -> AVAudioPlayer? {
+    func createPlayer(for asset: SoundAsset, mode: ShrutiMode) -> AVAudioPlayer? {
         if currentMode != .mainPage {
             configureForMainPage()
         }
         
-        guard let path = Bundle.main.path(forResource: asset.fileName, ofType: "wav") else {
-            print("Failed to find sound file: \(asset.fileName)")
+        let fileName = asset.fileName(mode: mode)
+        guard let path = Bundle.main.path(forResource: fileName, ofType: "wav") else {
+            print("Failed to find sound file: \(fileName)")
             return nil
         }
         

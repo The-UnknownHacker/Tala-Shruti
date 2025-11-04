@@ -11,7 +11,7 @@ class UserDefaultsManager: ObservableObject {
     
     private let themeKey = "selectedTheme"
     private let colorSchemeKey = "colorScheme"
-    private let madhyamamKey = "useMadhyamam"
+    private let shrutiModeKey = "shrutiMode"
     private let volumeKey = "volume"
     private let backgroundPlaybackKey = "backgroundPlayback"
     
@@ -28,11 +28,11 @@ class UserDefaultsManager: ObservableObject {
     }
     
     func savePreferences(theme: ThemeColor, colorScheme: ColorSchemeMode, 
-                        useMadhyamam: Bool, volume: Double, 
+                        shrutiMode: ShrutiMode, volume: Double, 
                         backgroundPlayback: Bool) {
         defaults.set(theme.rawValue, forKey: themeKey)
         defaults.set(colorScheme.rawValue, forKey: colorSchemeKey)
-        defaults.set(useMadhyamam, forKey: madhyamamKey)
+        defaults.set(shrutiMode.rawValue, forKey: shrutiModeKey)
         defaults.set(volume, forKey: volumeKey)
         defaults.set(backgroundPlayback, forKey: backgroundPlaybackKey)
     }
@@ -53,8 +53,12 @@ class UserDefaultsManager: ObservableObject {
         return mode
     }
     
-    func loadMadhyamam() -> Bool {
-        defaults.bool(forKey: madhyamamKey)
+    func loadShrutiMode() -> ShrutiMode {
+        guard let modeString = defaults.string(forKey: shrutiModeKey),
+              let mode = ShrutiMode(rawValue: modeString) else {
+            return .pa
+        }
+        return mode
     }
     
     func loadVolume() -> Double {

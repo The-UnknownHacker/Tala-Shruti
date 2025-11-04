@@ -1,0 +1,46 @@
+Shruti
+
+PA - 
+C - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-c3-60-bpm_1.wav
+C# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-c-hash-3-60-bpm_1.wav
+D - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-d3-60-bpm_1.wav
+D# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-d-hash-3-60-bpm_1.wav
+E - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-e3-60-bpm_1.wav
+F - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-f3-60-bpm_1.wav
+F# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-f-hash-3-60-bpm_1.wav
+G - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-g3-60-bpm_1.wav
+G# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-g-hash-3-60-bpm_1.wav
+A - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-a3-60-bpm_1.wav
+A# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-a-hash-3-60%20bpm_1.wav
+B - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/pa-tanpura-b3-60-bpm_1.wav
+
+MA - 
+
+C - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-c3-60-bpm_1.wav
+C# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-c-hash-3-60-bpm_1.wav
+D - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-d3-60-bpm_1.wav
+D# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-d-hash-3-60-bpm_1.wav
+E - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-e3-60-bpm_1.wav
+F - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-f3-60-bpm_1.wav
+F# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-f-hash-3-60-bpm_1.wav
+G - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-g3-60-bpm_1.wav
+G# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-g-hash-3-60-bpm_1.wav
+A - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-a3-60-bpm_1.wav
+A# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-a-hash-3-60%20bpm_1.wav
+B - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ma-tanpura-b3-60-bpm_1.wav
+
+
+
+ Ni- 
+C - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-c3-60-bpm_1.wav
+C# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-c-hash-3-60-bpm_1.wav
+D - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-d3-60-bpm_1.wav
+D# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-d-hash-3-60-bpm_1.wav
+E - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-e3-60-bpm_1.wav
+F - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-f3-60-bpm_1.wav
+F# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-f-hash-3-60-bpm_1.wav
+G - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-g3-60-bpm_1.wav
+G# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-g-hash-3-60-bpm_1.wav
+A - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-a3-60-bpm_1.wav
+A# - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-a-hash-3-60%20bpm_1.wav
+B - https://api.artiumacademy.com/tanpura-files/tanpura-new-files/ni-tanpura-b3-60-bpm_1.wav

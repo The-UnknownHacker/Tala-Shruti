@@ -88,7 +88,7 @@ private struct ShrutiButtonGrid: View {
     var toggleShruti: (SoundAsset) -> Void
     let effectiveColorScheme: ColorScheme
     let activeTheme: ThemeColor
-    let useMadhyamam: Bool
+    let shrutiMode: ShrutiMode
     
     var body: some View {
         ScrollView {
@@ -101,7 +101,7 @@ private struct ShrutiButtonGrid: View {
                             buttonSize: buttonSize,
                             isSelected: selectedShruti == shruti,
                             isPlaying: isPlaying,
-                            useMadhyamam: useMadhyamam,
+                            shrutiMode: shrutiMode,
                             effectiveColorScheme: effectiveColorScheme,
                             activeTheme: activeTheme
                         )
@@ -122,7 +122,7 @@ private struct ShrutiButtonContent: View {
     let buttonSize: CGFloat
     let isSelected: Bool
     let isPlaying: Bool
-    let useMadhyamam: Bool
+    let shrutiMode: ShrutiMode
     let effectiveColorScheme: ColorScheme
     let activeTheme: ThemeColor
     
@@ -132,7 +132,7 @@ private struct ShrutiButtonContent: View {
                 .font(.system(size: fontSize, weight: .bold, design: .rounded))
                 .foregroundColor(getTextColor())
             if isSelected && isPlaying {
-                Text(useMadhyamam ? "Madhyamam" : "Playing")
+                Text(shrutiMode.shortName)
                     .font(.caption)
                     .foregroundColor(getTextColor())
             }
@@ -178,7 +178,7 @@ private struct ShrutiButtonContent: View {
 struct ShrutiBoxView: View {
     @StateObject private var audioManager = AudioManager.shared
     @State private var isPlaying = false
-    @State private var useMadhyamam: Bool
+    @State private var shrutiMode: ShrutiMode
     @State private var audioPlayer: AVAudioPlayer?
     @State private var selectedShruti: SoundAsset?
     @State private var showSettings = false
@@ -196,7 +196,7 @@ struct ShrutiBoxView: View {
         let defaults = UserDefaultsManager.shared
         _activeTheme = State(initialValue: defaults.loadTheme())
         _colorSchemeMode = State(initialValue: defaults.loadColorScheme())
-        _useMadhyamam = State(initialValue: defaults.loadMadhyamam())
+        _shrutiMode = State(initialValue: defaults.loadShrutiMode())
         _volume = State(initialValue: defaults.loadVolume())
         _backgroundPlayback = State(initialValue: defaults.loadBackgroundPlayback())
     }
@@ -302,7 +302,7 @@ struct ShrutiBoxView: View {
                                     shruti: shruti,
                                     isSelected: selectedShruti == shruti,
                                     isPlaying: isPlaying,
-                                    useMadhyamam: useMadhyamam,
+                                    shrutiMode: shrutiMode,
                                     angle: angle,
                                     activeTheme: activeTheme
                                 )
@@ -321,6 +321,9 @@ struct ShrutiBoxView: View {
                                         .font(.system(size: 48, weight: .bold, design: .rounded))
                                     Text(selected.noteValue)
                                         .font(.title2)
+                                        .foregroundColor(.secondary)
+                                    Text(shrutiMode.shortName)
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
                                 } else {
                                     Text("Tap a note")
@@ -372,17 +375,23 @@ struct ShrutiBoxView: View {
                             }
                             .padding(.horizontal)
                             
-                            HStack(spacing: 20) {
-                                Button(action: { 
-                                    useMadhyamam.toggle()
-                                    if isPlaying, let currentShruti = selectedShruti {
-                                        stopPlaying()
-                                        playShruti(currentShruti)
+                            HStack(spacing: 12) {
+                                ForEach(ShrutiMode.allCases, id: \.self) { mode in
+                                    Button(action: { 
+                                        shrutiMode = mode
+                                        if isPlaying, let currentShruti = selectedShruti {
+                                            stopPlaying()
+                                            playShruti(currentShruti)
+                                        }
+                                    }) {
+                                        Text(mode.shortName)
+                                            .font(.system(.body, design: .rounded))
+                                            .fontWeight(.semibold)
+                                            .frame(minWidth: 60)
                                     }
-                                }) {
-                                    Label(useMadhyamam ? "Madhyamam" : "Normal", systemImage: "music.note")
+                                    .buttonStyle(.bordered)
+                                    .tint(shrutiMode == mode ? .accentColor : .gray)
                                 }
-                                .buttonStyle(.bordered)
                             }
                         }
                         .padding()
@@ -426,7 +435,7 @@ struct ShrutiBoxView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView(
-                    useMadhyamam: $useMadhyamam,
+                    shrutiMode: $shrutiMode,
                     volume: $volume,
                     backgroundPlayback: $backgroundPlayback,
                     activeTheme: $activeTheme,
@@ -439,7 +448,7 @@ struct ShrutiBoxView: View {
         }
         .onChange(of: activeTheme) { _ in savePreferences() }
         .onChange(of: colorSchemeMode) { _ in savePreferences() }
-        .onChange(of: useMadhyamam) { _ in savePreferences() }
+        .onChange(of: shrutiMode) { _ in savePreferences() }
         .onChange(of: volume) { newValue in
             audioPlayer?.volume = Float(newValue)
             savePreferences()
@@ -467,7 +476,7 @@ struct ShrutiBoxView: View {
     private func playShruti(_ note: SoundAsset) {
         stopPlaying()
         
-        let filename = useMadhyamam ? "\(note)_madhyamam" : String(describing: note)
+        let filename = note.fileName(mode: shrutiMode)
         
         if let url = Bundle.main.url(forResource: filename, withExtension: "wav") {
             do {
@@ -483,6 +492,8 @@ struct ShrutiBoxView: View {
             } catch {
                 print("Could not create audio player: \(error)")
             }
+        } else {
+            print("Could not find audio file: \(filename).wav")
         }
     }
     
@@ -496,7 +507,7 @@ struct ShrutiBoxView: View {
         UserDefaultsManager.shared.savePreferences(
             theme: activeTheme,
             colorScheme: colorSchemeMode,
-            useMadhyamam: useMadhyamam,
+            shrutiMode: shrutiMode,
             volume: volume,
             backgroundPlayback: backgroundPlayback
         )
@@ -507,7 +518,7 @@ struct ShrutiButton: View {
     let shruti: SoundAsset
     let isSelected: Bool
     let isPlaying: Bool
-    let useMadhyamam: Bool
+    let shrutiMode: ShrutiMode
     let angle: Double
     let activeTheme: ThemeColor
     
@@ -518,7 +529,7 @@ struct ShrutiButton: View {
                 .fontWeight(.bold)
             
             if isSelected && isPlaying {
-                Text(useMadhyamam ? "M" : "P")
+                Text(shrutiMode.shortName)
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundColor(activeTheme == .white ? .black : .white)
@@ -527,16 +538,12 @@ struct ShrutiButton: View {
         .frame(width: 60, height: 60)
         .background(
             Circle()
-                .fill(isSelected && isPlaying ? 
-                    (useMadhyamam ? Color.purple : activeTheme.color) : 
-                    Color(.systemBackground))
+                .fill(isSelected && isPlaying ? activeTheme.color : Color(.systemBackground))
                 .shadow(radius: 3)
         )
         .overlay(
             Circle()
-                .strokeBorder(isSelected && isPlaying ? 
-                    (useMadhyamam ? Color.purple : activeTheme.color) : 
-                    Color.secondary.opacity(0.3), lineWidth: 1)
+                .strokeBorder(isSelected && isPlaying ? activeTheme.color : Color.secondary.opacity(0.3), lineWidth: 1)
         )
         .foregroundColor(isSelected && isPlaying ? 
             (activeTheme == .white ? .black : .white) : 
@@ -548,7 +555,7 @@ struct ShrutiButton: View {
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
-    @Binding var useMadhyamam: Bool
+    @Binding var shrutiMode: ShrutiMode
     @Binding var volume: Double
     @Binding var backgroundPlayback: Bool
     @Binding var activeTheme: ThemeColor
@@ -558,7 +565,11 @@ struct SettingsView: View {
         NavigationView {
             Form {
                 Section {
-                    Toggle("Madhyamam Mode", isOn: $useMadhyamam)
+                    Picker("Shruti Mode", selection: $shrutiMode) {
+                        ForEach(ShrutiMode.allCases, id: \.self) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
+                    }
                     Toggle("Background Playback", isOn: $backgroundPlayback)
                 } header: {
                     Text("Playback Settings")
@@ -600,7 +611,7 @@ struct SettingsView: View {
                         UserDefaultsManager.shared.savePreferences(
                             theme: activeTheme,
                             colorScheme: colorSchemeMode,
-                            useMadhyamam: useMadhyamam,
+                            shrutiMode: shrutiMode,
                             volume: volume,
                             backgroundPlayback: backgroundPlayback
                         )
